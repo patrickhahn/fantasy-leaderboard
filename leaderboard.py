@@ -10,34 +10,46 @@ class Team:
     def printInfo(self):
         print(', '.join([self.name, self.owner] + [str(val) for val in cats.values()]))
 
-response = requests.get('https://www.fleaflicker.com/nba/leagues/20730')
-assert(response.status_code == 200)
+teams = []
+with open('leagues/d4.txt', 'r') as f:
+    leagueUrls = f.readlines() 
 
-soup = BeautifulSoup(response.content, 'html.parser')
+print len(leagueUrls)
 
-leagueTable = soup.find(id='body-center-main').table
+for url in leagueUrls:
+    response = requests.get(url.strip())
+    assert(response.status_code == 200)
 
-for row in leagueTable.find_all('tr'):
-    nameCell = row.find(class_='league-name')
-    if nameCell is not None:
-        name = nameCell.get_text()
-        maybeOwner = row.find(class_='user-name')
-        owner = 'N/A' if maybeOwner is None else maybeOwner.get_text()
-        
-        cells = row.contents
-        cats = dict()
-        cats['fgpct'] = float(cells[3].span.get_text())
-        cats['ftpct'] = float(cells[4].span.get_text())
-        cats['threes'] = int(cells[5].span.get_text().replace(',',''))
-        cats['reb'] = int(cells[6].span.get_text().replace(',',''))
-        cats['stl'] = int(cells[7].span.get_text().replace(',',''))
-        cats['blk'] = int(cells[8].span.get_text().replace(',',''))
-        cats['ast'] = int(cells[9].span.get_text().replace(',',''))
-        cats['to'] = int(cells[10].span.get_text().replace(',',''))
-        cats['pts'] = int(cells[11].span.get_text().replace(',',''))
+    soup = BeautifulSoup(response.content, 'html.parser')
 
-        team = Team(name, owner, cats)
-        team.printInfo()
+    leagueTable = soup.find(id='body-center-main').table
+
+    for row in leagueTable.find_all('tr'):
+        nameCell = row.find(class_='league-name')
+        if nameCell is not None:
+            name = nameCell.get_text()
+            maybeOwner = row.find(class_='user-name')
+            owner = 'N/A' if maybeOwner is None else maybeOwner.get_text()
+            
+            cells = row.contents
+            cats = dict()
+            cats['fgpct'] = float(cells[3].span.get_text())
+            cats['ftpct'] = float(cells[4].span.get_text())
+            cats['threes'] = int(cells[5].span.get_text().replace(',',''))
+            cats['reb'] = int(cells[6].span.get_text().replace(',',''))
+            cats['stl'] = int(cells[7].span.get_text().replace(',',''))
+            cats['blk'] = int(cells[8].span.get_text().replace(',',''))
+            cats['ast'] = int(cells[9].span.get_text().replace(',',''))
+            cats['to'] = int(cells[10].span.get_text().replace(',',''))
+            cats['pts'] = int(cells[11].span.get_text().replace(',',''))
+
+            team = Team(name, owner, cats)
+            teams.append(team)
+
+print len(teams)
+
+for team in teams:
+    team.printInfo()
 
     
         
