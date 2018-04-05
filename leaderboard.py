@@ -53,8 +53,7 @@ def scrapeTeamDataForLeague(htmlPage):
             teams.append(team)
     return teams
 
-def addCategoryRanks(teams):
-    categories = ['FG%', 'FT%', '3Pt', 'Reb', 'Stl', 'Blk', 'Ast', 'TO', 'Pts']
+def addCategoryRanks(teams, categories):
     for cat in categories:
         team_value = {team: team.categories[cat] for team in teams}
 
@@ -75,29 +74,39 @@ def addCategoryRanks(teams):
                 current_points = len(teams) - idx
                 teamsToScore = [team]
             prev = value
+        for t in teamsToScore: # score the final group left after last iteration
+            t.points[cat] = current_points
 
-def writeToCSV(output, teams):
+def writeToCSV(output, teams, cats):
     with open(output, 'wb') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
+        cat_header = [c for cat in zip(cats, [s + ' Rank' for s in cats]) for c in cat]
+        writer.writerow(['Rank', 'Team', 'Owner', 'Overall'] + cat_header)
+        for idx, team in enumerate(teams):
+            val_rank = [(team.categories[cat], team.points[cat]) for cat in cats] # category value paired with rank points
+            cat_row = list(sum(val_rank, ())) # flatten list of value/rank pairs
+            writer.writerow([idx+1, team.name, team.owner, team.total] + cat_row )
 
 def main():
-    teams = []
-    with open('leagues/d4.txt', 'r') as f:
+    categories = ['FG%', 'FT%', '3Pt', 'Reb', 'Stl', 'Blk', 'Ast', 'TO', 'Pts']
+    leagueUrls = []
+    with open('leagues/d3.txt', 'r') as f:
         leagueUrls = f.readlines() 
-        leaguePages = loadHtmlPages(leagueUrls)
+    
+    leaguePages = loadHtmlPages(leagueUrls)
+    teams = []
+    for page in leaguePages:
+        teams.extend(scrapeTeamDataForLeague(page))
 
-        for page in leaguePages:
-            teams.extend(scrapeTeamDataForLeague(page))
+    addCategoryRanks(teams, categories) 
+    for team in teams:
+        team.sumPoints()
 
-        addCategoryRanks(teams) 
-        for team in teams:
-            team.sumPoints()
+    teams.sort(key=lambda t: t.total, reverse=True)
+    for idx, team in enumerate(teams):
+        print "{0}) {1}: {2}".format(idx+1, team.owner, team.total)
 
-        teams.sort(key=lambda t: t.total, reverse=True)
-        for idx, team in enumerate(teams):
-            print "{0}) {1}: {2}".format(idx+1, team.owner, team.total)
-
-        writeToCSV(teams)
+    writeToCSV('output/d3.csv', teams, categories)
 
 if __name__ == "__main__":
     main()
