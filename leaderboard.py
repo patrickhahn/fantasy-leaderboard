@@ -105,8 +105,8 @@ def main():
         team.sumPoints()
 
     teams.sort(key=lambda t: t.total, reverse=True)
-    for idx, team in enumerate(teams):
-        print "{0}) {1}: {2}".format(idx+1, team.owner, team.total)
+    # for idx, team in enumerate(teams):
+    #     print "{0}) {1}: {2}".format(idx+1, team.owner, team.total)
 
     writeToCSV(sys.argv[2], teams, categories)
 
