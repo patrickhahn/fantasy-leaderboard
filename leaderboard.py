@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import csv
 import operator
 import requests
+import sys
 
 class Team:
     def __init__(self, name, owner, cats):
@@ -90,8 +91,9 @@ def writeToCSV(output, teams, cats):
 def main():
     categories = ['FG%', 'FT%', '3Pt', 'Reb', 'Stl', 'Blk', 'Ast', 'TO', 'Pts']
     leagueUrls = []
-    with open('leagues/d3.txt', 'r') as f:
-        leagueUrls = f.readlines() 
+    for inputFile in sys.argv[1].split(','):
+        with open(inputFile, 'r') as f:
+            leagueUrls.extend(f.readlines())
     
     leaguePages = loadHtmlPages(leagueUrls)
     teams = []
@@ -106,7 +108,7 @@ def main():
     for idx, team in enumerate(teams):
         print "{0}) {1}: {2}".format(idx+1, team.owner, team.total)
 
-    writeToCSV('output/d3.csv', teams, categories)
+    writeToCSV(sys.argv[2], teams, categories)
 
 if __name__ == "__main__":
     main()
